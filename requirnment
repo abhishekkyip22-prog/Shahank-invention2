@@ -7,7 +7,7 @@ requests>=2.31.0
 ortools>=9.8.3296
 pydeck>=0.8.0
 altair>=5.0.0
- streamlit
+streamlit
 folium
 streamlit-folium
 pandas
