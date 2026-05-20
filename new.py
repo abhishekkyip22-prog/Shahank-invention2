@@ -718,15 +718,15 @@ with t2:
                 tooltip=f"{'⭐ ' if best else ''}🏭 {wh['name']}").add_to(fmap)
 
         for i,d in enumerate(result["deliveries"]):
-            pc=pcols[d["priority"]]; di=ml_preds[i] if i<len(ml_preds) else None
-            ds="⚠️" if(di and di["delay_predicted"]) else "✅"
-            delay_text = f"{di['delay_prob']*100:.0f}%" if di else "—"
-
-pop=(f"<div style='font-family:sans-serif;min-width:200px;padding:4px;'>"
-     f"<b style='color:{pc};font-size:14px;'>{d['label']}</b><hr style='margin:5px 0;'>"
-     f"📦 {d['weight_kg']} kg · 🎯 {d['priority']}<br>"
-     f"{ds} Delay risk: {delay_text}<br>"
-     f"🚗 Rec: {di['recommended_vehicle'] if di else '—'}</div>")
+    pc=pcols[d["priority"]]; di=ml_preds[i] if i<len(ml_preds) else None
+    ds="⚠️" if(di and di["delay_predicted"]) else "✅"
+    delay_str = f"{di['delay_prob']*100:.0f}%" if di else "—"   # ← pre-compute
+    rec_veh = di['recommended_vehicle'] if di else '—'
+    pop=(f"<div style='font-family:sans-serif;min-width:200px;padding:4px;'>"
+         f"<b style='color:{pc};font-size:14px;'>{d['label']}</b><hr style='margin:5px 0;'>"
+         f"📦 {d['weight_kg']} kg · 🎯 {d['priority']}<br>"
+         f"{ds} Delay risk: {delay_str}<br>"
+         f"🚗 Rec: {rec_veh}</div>")
             mh=(f'<div style="width:30px;height:30px;background:{pc};border:3px solid white;'
                 f'border-radius:50%;display:flex;align-items:center;justify-content:center;'
                 f'color:white;font-size:12px;font-weight:800;box-shadow:0 3px 10px rgba(0,0,0,.22);">{i+1}</div>')
