@@ -103,9 +103,6 @@ h1,h2,h3 { font-family:'Outfit',sans-serif !important; font-weight:800 !importan
 .mapbox { background:linear-gradient(135deg,var(--violet-s),var(--sky-s));border:1.5px solid var(--border2);border-radius:var(--r);padding:14px 18px;font-size:13px;color:var(--text2);font-weight:500; }
 .coord-chip { display:inline-flex;align-items:center;gap:6px;background:white;border:1.5px solid var(--border2);border-radius:10px;padding:6px 14px;margin:4px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--violet);box-shadow:var(--sh-sm); }
 
-/* Search box */
-.search-box { background:white;border:1.5px solid var(--border2);border-radius:12px;padding:0;box-shadow:var(--sh-md);overflow:hidden;display:flex;align-items:center; }
-
 /* ML panel */
 .ml-panel { background:linear-gradient(135deg,var(--violet-s),#f0f7ff);border:1.5px solid var(--border2);border-radius:var(--rl);padding:22px;box-shadow:var(--sh-sm); }
 .ml-badge { display:inline-flex;align-items:center;gap:5px;background:var(--violet);color:white;border-radius:6px;font-size:9px;font-weight:800;letter-spacing:2px;padding:3px 10px;margin-bottom:14px;font-family:'JetBrains Mono',monospace; }
@@ -240,7 +237,6 @@ def fetch_route(s,e):
     except: return None
 
 def geocode_location(query):
-    """Search for a location using Nominatim (OpenStreetMap) - no API key needed."""
     try:
         url = "https://nominatim.openstreetmap.org/search"
         params = {"q": query, "format": "json", "limit": 5}
@@ -421,7 +417,7 @@ for col,(lbl,val,sub,cls) in zip(kc,[
     ("Active Hubs",  str(len(active_wh)), f"of {len(st.session_state.warehouses)} total","kv"),
     ("Fleet Size",   str(num_vehicles),   ", ".join(set(v["type"] for v in vehicle_types)),"kt"),
     ("Weather Risk", f"{wp['risk']}%",    f"{wp['icon']} {weather.capitalize()}","ka"),
-    ("Traffic",      traffic_level,       f"×{traffic_mult} speed penalty","kc"),
+    ("Traffic",      traffic_level,       f"x{traffic_mult} speed penalty","kc"),
     ("AI Accuracy",  "86%",              "RandomForest delay model","ks"),
 ]):
     col.markdown(f"""<div class="kpi {cls}">
@@ -440,7 +436,7 @@ t1,t2,t3,t4,t5=st.tabs(["📦  Orders & Input","🗺️  Route Map","📊  Analy
 #  TAB 1 — ORDERS & INPUT
 # ══════════════════════════════════════════════
 with t1:
-    # ── LOCATION SEARCH (Google Maps style) ──
+    # ── LOCATION SEARCH ──
     st.markdown('<div class="sec-head">🔍 Location Search</div>', unsafe_allow_html=True)
     sc1, sc2 = st.columns([3,1])
     with sc1:
@@ -487,7 +483,6 @@ with t1:
         st.markdown('<div class="mapbox">🖱️ <b>Click the map</b> to capture coordinates, then assign them to any stop. Or use the search bar above to find a location by name.</div>', unsafe_allow_html=True)
 
         cm=folium.Map(location=st.session_state.map_center,zoom_start=12,tiles="CartoDB Positron")
-        # Show search result pin if present
         if st.session_state.map_clicked_coord:
             lat_c,lon_c=st.session_state.map_clicked_coord
             folium.Marker([lat_c,lon_c],
@@ -717,16 +712,23 @@ with t2:
                 icon=folium.DivIcon(html=ih,icon_size=(36,36),icon_anchor=(18,18)),
                 tooltip=f"{'⭐ ' if best else ''}🏭 {wh['name']}").add_to(fmap)
 
+        # ── FIX: pre-compute strings before f-string (line 726 fix) ──
         for i,d in enumerate(result["deliveries"]):
-    pc=pcols[d["priority"]]; di=ml_preds[i] if i<len(ml_preds) else None
-    ds="⚠️" if(di and di["delay_predicted"]) else "✅"
-    delay_str = f"{di['delay_prob']*100:.0f}%" if di else "—"   # ← pre-compute
-    rec_veh = di['recommended_vehicle'] if di else '—'
-    pop=(f"<div style='font-family:sans-serif;min-width:200px;padding:4px;'>"
-         f"<b style='color:{pc};font-size:14px;'>{d['label']}</b><hr style='margin:5px 0;'>"
-         f"📦 {d['weight_kg']} kg · 🎯 {d['priority']}<br>"
-         f"{ds} Delay risk: {delay_str}<br>"
-         f"🚗 Rec: {rec_veh}</div>")
+            pc=pcols[d["priority"]]
+            di=ml_preds[i] if i<len(ml_preds) else None
+            ds="⚠️" if (di and di["delay_predicted"]) else "✅"
+            # Pre-compute to avoid nested f-string with backslash (the original bug)
+            delay_str = (str(round(di["delay_prob"] * 100)) + "%") if di else "—"
+            rec_veh   = di["recommended_vehicle"] if di else "—"
+            pop = (
+                "<div style='font-family:sans-serif;min-width:200px;padding:4px;'>"
+                f"<b style='color:{pc};font-size:14px;'>{d['label']}</b>"
+                "<hr style='margin:5px 0;'>"
+                f"📦 {d['weight_kg']} kg · 🎯 {d['priority']}<br>"
+                f"{ds} Delay risk: {delay_str}<br>"
+                f"🚗 Rec: {rec_veh}"
+                "</div>"
+            )
             mh=(f'<div style="width:30px;height:30px;background:{pc};border:3px solid white;'
                 f'border-radius:50%;display:flex;align-items:center;justify-content:center;'
                 f'color:white;font-size:12px;font-weight:800;box-shadow:0 3px 10px rgba(0,0,0,.22);">{i+1}</div>')
@@ -737,7 +739,7 @@ with t2:
         st_folium(fmap,width="100%",height=580,key="main_map")
 
         st.markdown('<div class="sec-head">📊 Warehouse Comparison</div>', unsafe_allow_html=True)
-        df_wh=pd.DataFrame([{"ID":wh["id"],"Name":wh["name"],"Score (↓ better)":sc,
+        df_wh=pd.DataFrame([{"ID":wh["id"],"Name":wh["name"],"Score (lower = better)":sc,
             "Avg Dist (km)":round(np.mean([haversine((wh["lat"],wh["lon"]),d["coord"]) for d in deliveries]),2),
             "Capacity (kg)":wh["capacity"],"Selected":"✅ Yes" if wh["id"]==result["best_wh"]["id"] else "—"
         } for sc,wh in result["wh_scores"]])
@@ -757,7 +759,7 @@ with t3:
         routes=result["routes"]
         df=pd.DataFrame([{"Vehicle":f"{r['vehicle']['id']} ({r['vtype']})","Load %":r["cap_util"],
             "Distance (km)":r["dist_km"],"ETA (min)":r["eta_min"],
-            "Cost (₹)":r["fuel_cost"],"CO₂ (kg)":r["co2_kg"],"Stops":r["stops"]} for r in routes])
+            "Cost (Rs)":r["fuel_cost"],"CO2 (kg)":r["co2_kg"],"Stops":r["stops"]} for r in routes])
 
         a1,a2=st.columns(2)
         with a1:
@@ -766,17 +768,17 @@ with t3:
                 x=alt.X("Vehicle:N",axis=alt.Axis(labelColor="#374151",labelAngle=-20,title="")),
                 y=alt.Y("Load %:Q",scale=alt.Scale(domain=[0,100]),axis=alt.Axis(labelColor="#374151",title="Load %")),
                 color=alt.Color("Vehicle:N",legend=None,scale=alt.Scale(range=RCOLS)),
-                tooltip=["Vehicle","Load %","Distance (km)","Cost (₹)"]
+                tooltip=["Vehicle","Load %","Distance (km)","Cost (Rs)"]
             ).properties(height=240,background="transparent").configure_view(strokeWidth=0,fill="transparent").configure_axis(grid=True,gridColor="#f1f5f9")
             st.altair_chart(bar,use_container_width=True)
         with a2:
             st.markdown('<div class="sec-head">💰 Cost vs Distance</div>', unsafe_allow_html=True)
             scatter=alt.Chart(df).mark_circle(opacity=.9,stroke="white",strokeWidth=2).encode(
                 x=alt.X("Distance (km):Q",axis=alt.Axis(labelColor="#374151")),
-                y=alt.Y("Cost (₹):Q",axis=alt.Axis(labelColor="#374151")),
+                y=alt.Y("Cost (Rs):Q",axis=alt.Axis(labelColor="#374151")),
                 size=alt.Size("Stops:Q",scale=alt.Scale(range=[100,650]),legend=None),
                 color=alt.Color("Vehicle:N",legend=None,scale=alt.Scale(range=RCOLS)),
-                tooltip=["Vehicle","Distance (km)","Cost (₹)","Stops","CO₂ (kg)"]
+                tooltip=["Vehicle","Distance (km)","Cost (Rs)","Stops","CO2 (kg)"]
             ).properties(height=240,background="transparent").configure_view(strokeWidth=0,fill="transparent").configure_axis(grid=True,gridColor="#f1f5f9")
             st.altair_chart(scatter,use_container_width=True)
 
@@ -820,18 +822,16 @@ with t3:
         st.info("Run optimization to see analysis.")
 
 # ══════════════════════════════════════════════
-#  TAB 4 — LIVE TRACKING  (Folium-based, always has base map)
+#  TAB 4 — LIVE TRACKING
 # ══════════════════════════════════════════════
 with t4:
     if result and result["all_route_coords"]:
         st.markdown('<div class="sec-head">📡 Live Fleet Tracking — Google Maps Style</div>', unsafe_allow_html=True)
 
-        # Build the stepped path (every 3rd point for performance)
         full_path = result["all_route_coords"]
         step_path = full_path[::3]
         total_steps = len(step_path)
 
-        # ── controls ──
         ctrl1, ctrl2, ctrl3 = st.columns([1,1,2])
         start_btn = ctrl1.button("▶️ Play", use_container_width=True, key="live_play")
         reset_btn = ctrl2.button("⏹ Reset", use_container_width=True, key="live_reset")
@@ -840,13 +840,12 @@ with t4:
             st.session_state.live_step = 0
             st.rerun()
 
-        # Progress bar + status
         step = st.session_state.get("live_step", 0)
         prog = step / max(total_steps - 1, 1)
         st.progress(min(prog, 1.0))
 
         if step < total_steps:
-            cur_ll = step_path[step]   # [lat, lon]
+            cur_ll = step_path[step]
             eta_remain = int((1 - prog) * max(r["eta_min"] for r in result["routes"]))
             st.markdown(f"""<div class="live-status">
                 <div style="display:flex;gap:28px;align-items:center;flex-wrap:wrap;">
@@ -877,43 +876,31 @@ with t4:
         else:
             st.markdown('<div class="live-status"><b style="color:#00cfa8;font-size:15px;">✅ All deliveries completed!</b></div>', unsafe_allow_html=True)
 
-        # ── Map placeholder ──
         map_ph = st.empty()
 
         def render_live_map(step_idx):
-            """Render Folium map with travelled path + vehicle dot + all stops."""
             travelled = step_path[:step_idx+1]
             cur = travelled[-1]
-            # Centre on current vehicle position
-            lmap = folium.Map(location=[cur[0], cur[1]], zoom_start=13,
-                              tiles="CartoDB Positron")
+            lmap = folium.Map(location=[cur[0], cur[1]], zoom_start=13, tiles="CartoDB Positron")
 
-            # Faint full route (ghost)
             if len(step_path) > 1:
                 folium.PolyLine([[p[0],p[1]] for p in step_path],
                     color="#c7d2fe", weight=4, opacity=0.45, dash_array="6 8").add_to(lmap)
 
-            # Travelled path (coloured, thick)
             if len(travelled) > 1:
-                for ri, rd in enumerate(result["routes"]):
-                    c = RCOLS[ri % len(RCOLS)]
-                    # Draw each route's travelled portion
                 folium.PolyLine([[p[0],p[1]] for p in travelled],
                     color="#7c3aed", weight=5, opacity=0.92).add_to(lmap)
 
-            # Vehicle dot — pulsing circle
             folium.CircleMarker([cur[0],cur[1]], radius=14,
                 color="white", fill=True, fill_color="#7c3aed",
                 fill_opacity=1, weight=3,
                 tooltip="🚚 Fleet vehicle").add_to(lmap)
             folium.CircleMarker([cur[0],cur[1]], radius=22,
                 color="#7c3aed", fill=False, weight=2, opacity=0.4).add_to(lmap)
-            # Truck icon
-            truck_html=('<div style="font-size:20px;line-height:1;">🚚</div>')
+            truck_html = '<div style="font-size:20px;line-height:1;">🚚</div>'
             folium.Marker([cur[0],cur[1]],
                 icon=folium.DivIcon(html=truck_html,icon_size=(24,24),icon_anchor=(12,12))).add_to(lmap)
 
-            # Warehouses
             for wh in active_wh:
                 best=wh["id"]==result["best_wh"]["id"]
                 ih=(f'<div style="width:32px;height:32px;border-radius:9px;'
@@ -925,11 +912,9 @@ with t4:
                     icon=folium.DivIcon(html=ih,icon_size=(32,32),icon_anchor=(16,16)),
                     tooltip=f"{'⭐ ' if best else ''}🏭 {wh['name']}").add_to(lmap)
 
-            # Delivery stops
-            pcols={"Express":"#ff4757","Priority":"#ff9500","Same-Day":"#0ea5e9","Standard":"#64748b"}
+            pcols2={"Express":"#ff4757","Priority":"#ff9500","Same-Day":"#0ea5e9","Standard":"#64748b"}
             for i,d in enumerate(result["deliveries"]):
-                pc=pcols[d["priority"]]
-                # Check if delivered (before current step proportionally)
+                pc=pcols2[d["priority"]]
                 delivered = (step_idx / max(total_steps-1,1)) > ((i+1) / max(len(result["deliveries"]),1))
                 mh=(f'<div style="width:28px;height:28px;background:{"#e2e8f7" if delivered else pc};'
                     f'border:3px solid white;border-radius:50%;display:flex;align-items:center;'
@@ -942,26 +927,18 @@ with t4:
 
             return lmap
 
-        # ── Render initial / current frame ──
         with map_ph:
             live_map = render_live_map(min(step, total_steps-1))
             st_folium(live_map, width="100%", height=520, key=f"live_map_{step}")
 
-        # ── Animation loop ──
         if start_btn:
             start = st.session_state.live_step
             for i in range(start, total_steps):
                 st.session_state.live_step = i
-                p = i / max(total_steps-1, 1)
-                cur_ll = step_path[i]
-                eta_r = int((1-p) * max(r["eta_min"] for r in result["routes"]))
-
                 with map_ph:
                     lm = render_live_map(i)
                     st_folium(lm, width="100%", height=520, key=f"live_map_anim_{i}")
-
                 time.sleep(0.08)
-
             st.session_state.live_step = total_steps - 1
             st.rerun()
 
@@ -1013,15 +990,15 @@ with t5:
                 <div>{re_pill}</div>
             </div>""", unsafe_allow_html=True)
 
-        # ── Fixed Altair chart — no nested alt.condition, use calculated column instead ──
         st.markdown('<div class="sec-head">📈 Delay Probability Chart</div>', unsafe_allow_html=True)
         df_ml = pd.DataFrame(ml_preds)
         df_ml["delay_pct"] = (df_ml["delay_prob"] * 100).round(1)
-        # Assign color category as a plain string column — avoids nested alt.condition
+
         def delay_color_cat(p):
             if p > 50: return "High (>50%)"
             elif p > 30: return "Medium (30-50%)"
             else: return "Low (<30%)"
+
         df_ml["risk_band"] = df_ml["delay_pct"].apply(delay_color_cat)
 
         ch = alt.Chart(df_ml).mark_bar(cornerRadiusTopLeft=6, cornerRadiusTopRight=6).encode(
@@ -1043,10 +1020,17 @@ with t5:
         st.markdown(f"""<div class="ml-panel">
             <div class="ml-badge">🤖 AI SYSTEM SUMMARY</div>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;">
-                {''.join([f'<div style="text-align:center;background:white;border-radius:12px;padding:14px;border:1.5px solid #e2e8f7;">'
-                          f'<div style="font-size:24px;font-weight:900;font-family:Outfit,sans-serif;color:{c};">{v}</div>'
-                          f'<div style="font-size:11px;color:#94a3b8;font-weight:600;margin-top:2px;">{l}</div></div>'
-                          for v,l,c in [(len(ml_preds),"Orders","#7c3aed"),(td,"Delay Flags","#ff4757"),(tr,"Reroute Flags","#ff9500"),("86%","Accuracy","#00cfa8")]])}
+                {''.join([
+                    f'<div style="text-align:center;background:white;border-radius:12px;padding:14px;border:1.5px solid #e2e8f7;">'
+                    f'<div style="font-size:24px;font-weight:900;font-family:Outfit,sans-serif;color:{c};">{v}</div>'
+                    f'<div style="font-size:11px;color:#94a3b8;font-weight:600;margin-top:2px;">{l}</div></div>'
+                    for v,l,c in [
+                        (len(ml_preds), "Orders",       "#7c3aed"),
+                        (td,            "Delay Flags",  "#ff4757"),
+                        (tr,            "Reroute Flags","#ff9500"),
+                        ("86%",         "Accuracy",     "#00cfa8"),
+                    ]
+                ])}
             </div>
             <div style="background:white;border-radius:12px;padding:14px;border:1.5px solid #e2e8f7;
                         font-size:12px;color:#374151;line-height:2.2;font-weight:500;">
