@@ -720,9 +720,8 @@ with t2:
         for i,d in enumerate(result["deliveries"]):
             pc=pcols[d["priority"]]; di=ml_preds[i] if i<len(ml_preds) else None
             ds="⚠️" if(di and di["delay_predicted"]) else "✅"
-           delay_text = f"{di['delay_prob']*100:.0f}%" if di else "—"
-
-pop=(f"<div style='font-family:sans-serif;min-width:200px;padding:4px;'>"
+            delay_text = f"{di['delay_prob']*100:.0f}%" if di else "—"
+        pop=(f"<div style='font-family:sans-serif;min-width:200px;padding:4px;'>"
      f"<b style='color:{pc};font-size:14px;'>{d['label']}</b><hr style='margin:5px 0;'>"
      f"📦 {d['weight_kg']} kg · 🎯 {d['priority']}<br>"
      f"{ds} Delay risk: {delay_text}<br>"
