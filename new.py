@@ -1261,7 +1261,7 @@ with t1:
 
     st.markdown("<br>",unsafe_allow_html=True)
     b1,b2=st.columns(2)
-    run_vrp=b1.button("🚀 Optimize Routes (CVRPTW + AI)",use_container_width=True)
+    run_vrp=b1.button("🚀 Optimize Routes (CVRPTW )",use_container_width=True)
     clr_btn=b2.button("🔄 Reset All",use_container_width=True)
     if clr_btn: st.session_state.result=None; st.session_state.ml_predictions=[]; st.rerun()
 
@@ -1531,17 +1531,7 @@ with t4:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Feature callouts
-        st.markdown("""
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-            <span style="background:#f3f0ff;color:#7c3aed;border:1.5px solid #ddd5fb;padding:5px 14px;border-radius:100px;font-size:11px;font-weight:700;">🎯 Auto-follow truck</span>
-            <span style="background:#e0fff9;color:#00a88c;border:1.5px solid #a0f5e0;padding:5px 14px;border-radius:100px;font-size:11px;font-weight:700;">⚡ 60fps JS interpolation</span>
-            <span style="background:#e0f5ff;color:#0284c7;border:1.5px solid #bae8ff;padding:5px 14px;border-radius:100px;font-size:11px;font-weight:700;">🛰️ Satellite/Map/Dark tiles</span>
-            <span style="background:#fff8eb;color:#c97800;border:1.5px solid #ffe4a8;padding:5px 14px;border-radius:100px;font-size:11px;font-weight:700;">📍 Turn-by-turn nav</span>
-            <span style="background:#fff0f1;color:#ff4757;border:1.5px solid #ffd0d4;padding:5px 14px;border-radius:100px;font-size:11px;font-weight:700;">🚚 Per-vehicle fleet panel</span>
-            <span style="background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;padding:5px 14px;border-radius:100px;font-size:11px;font-weight:700;">✅ Live delivery status</span>
-        </div>
-        """, unsafe_allow_html=True)
+        
 
         # Build and render the full Google Maps style HTML
         live_html = build_live_tracking_html(result, active_wh, weather, ml_preds)
@@ -1555,7 +1545,7 @@ with t4:
         </div>""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════
-#  TAB 5 — AI INSIGHTS
+#  TAB 5 — INSIGHTS
 # ══════════════════════════════════════════════
 with t5:
     st.markdown('<div class="sec-head">🤖 AI Model Stack</div>', unsafe_allow_html=True)
