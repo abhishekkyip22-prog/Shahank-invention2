@@ -1061,7 +1061,7 @@ with st.sidebar:
                     font-size:21px;box-shadow:0 4px 14px rgba(124,58,237,.35);">🛰️</div>
         <div>
             <div style="font-family:'Outfit',sans-serif;font-size:19px;font-weight:800;color:#0d1626;">OptiRoute</div>
-            <div style="font-size:9px;color:#94a3b8;letter-spacing:2.5px;font-family:'JetBrains Mono',monospace;margin-top:1px;">SMART ROUTING v2</div>
+            <div style="font-size:9px;color:#94a3b8;letter-spacing:2.5px;font-family:'JetBrains Mono',monospace;margin-top:1px;">SMART ROUTING </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1118,7 +1118,7 @@ st.markdown(f"""
                     background:linear-gradient(120deg,#7c3aed 0%,#0ea5e9 45%,#00cfa8 100%);
                     -webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;">OptiRoute</div>
         <div style="font-size:11px;color:#94a3b8;letter-spacing:3px;margin-top:2px;font-family:'JetBrains Mono',monospace;">
-            MULTI-WAREHOUSE · AI ROUTING · CVRPTW OPTIMIZER</div>
+            MULTI-WAREHOUSE · CVRPTW OPTIMIZER</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:6px;">
         <span style="background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;padding:5px 14px;border-radius:100px;font-size:12px;font-weight:700;">● SYSTEM LIVE</span>
