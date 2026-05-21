@@ -18,7 +18,7 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 #  PAGE CONFIG
 # ─────────────────────────────────────────────
 st.set_page_config(
-    page_title="FleetIQ — Smart Routing",
+    page_title="OptiRoute — Smart Routing",
     layout="wide",
     initial_sidebar_state="expanded",
     page_icon="🛰️"
@@ -271,7 +271,7 @@ def geocode_location(query):
     try:
         url = "https://nominatim.openstreetmap.org/search"
         params = {"q": query, "format": "json", "limit": 5}
-        headers = {"User-Agent": "FleetIQ/2.0"}
+        headers = {"User-Agent": "OptiRoute/2.0"}
         r = requests.get(url, params=params, headers=headers, timeout=5)
         results = r.json()
         return [(float(x["lat"]), float(x["lon"]), x["display_name"]) for x in results]
@@ -608,7 +608,7 @@ def build_live_tracking_html(result, active_wh, weather, ml_preds):
 
 <!-- Top bar -->
 <div id="topbar">
-  <span class="brand">🛰️ FleetIQ</span>
+  <span class="brand">🛰️ OptiRoute</span>
   <div class="divider"></div>
   <div class="stat"><div class="stat-val" id="tb-eta">{total_eta}</div><div class="stat-lbl">ETA min</div></div>
   <div class="stat"><div class="stat-val">{total_dist} km</div><div class="stat-lbl">Total dist</div></div>
@@ -1060,7 +1060,7 @@ with st.sidebar:
                     display:flex;align-items:center;justify-content:center;
                     font-size:21px;box-shadow:0 4px 14px rgba(124,58,237,.35);">🛰️</div>
         <div>
-            <div style="font-family:'Outfit',sans-serif;font-size:19px;font-weight:800;color:#0d1626;">FleetIQ</div>
+            <div style="font-family:'Outfit',sans-serif;font-size:19px;font-weight:800;color:#0d1626;">OptiRoute</div>
             <div style="font-size:9px;color:#94a3b8;letter-spacing:2.5px;font-family:'JetBrains Mono',monospace;margin-top:1px;">SMART ROUTING v2</div>
         </div>
     </div>
@@ -1116,7 +1116,7 @@ st.markdown(f"""
     <div>
         <div style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:900;
                     background:linear-gradient(120deg,#7c3aed 0%,#0ea5e9 45%,#00cfa8 100%);
-                    -webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;">FleetIQ</div>
+                    -webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;">OptiRoute</div>
         <div style="font-size:11px;color:#94a3b8;letter-spacing:3px;margin-top:2px;font-family:'JetBrains Mono',monospace;">
             MULTI-WAREHOUSE · AI ROUTING · CVRPTW OPTIMIZER</div>
     </div>
@@ -1636,11 +1636,3 @@ with t5:
             <div style="font-size:14px;color:#94a3b8;margin-top:5px;">Run optimization to generate AI predictions</div>
         </div>""", unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
-#  FOOTER
-# ─────────────────────────────────────────────
-st.markdown("""<div style="text-align:center;padding:32px 0 10px;
-    color:#cbd5e1;font-size:11px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;">
-    FleetIQ v2.0 &nbsp;·&nbsp; CVRPTW + Warehouse Scoring
-    &nbsp;·&nbsp; RandomForest 86% &nbsp;·&nbsp; OSRM Real Roads &nbsp;·&nbsp; Google OR-Tools
-</div>""", unsafe_allow_html=True)
